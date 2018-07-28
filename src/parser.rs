@@ -26,6 +26,7 @@ pub fn slash(input: String) -> String {
 
 // }
 
+
 impl Default for TemplateParser {
     fn default() -> Self {
         let  fhm = FilterHashMap::new();

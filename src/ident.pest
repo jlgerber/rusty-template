@@ -1,14 +1,28 @@
 alpha = _{ 'a'..'z' | 'A'..'Z' }
 digit = _{ '0'..'9' }
-
+// additional acceptible symbols which may be part of a word
 symbol = _{  ("_" | "-" | "." )+ }
+// turn on ignoring whitespace per the docs
 whitespace = _{ " " }
+// open bracket
 ob = _{ "{" }
+// close bracket
 cb = _{ "}" }
+// slash
 pth = _{ "/" }
-word = { alpha ~ (alpha | digit | symbol)+ }
+// define a word as starting with a letter and followed by zero or more characters
+word = { alpha ~ (alpha | digit | symbol)* }
+// define an optword as a word followed by a question mark. We use this to
+// denote an optional word
 optword = @{ word ~ "?"}
+// var is a variable. That is an optword or word enclosed in open and/or closed brackets
+// we really don't need to differentiate between this and a transformation pipeline
+// defined below. We should excise the code and definition
 var = { ob  ~ ( optword | word ){1}  ~ cb }
+// trans is a transformation pipeline. it is a word or optword
+// followed by one or more pipelined words, all enclosed in brackets
 trans = { ob  ~ ( optword | word )  ~ ("|" ~ word )+ ~ cb }
+// a path is one or more words, sympobls and slashes
 path = @{ (word | symbol | pth )+ }
+// ident_list pulls everything together to define a complete template string.
 ident_list = _{ (var | trans | path)+ }

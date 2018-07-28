@@ -1,5 +1,3 @@
-use failure::Error;
-use PestError;
 
 #[derive(Debug, Fail)]
 pub enum RustyTemplateError {
