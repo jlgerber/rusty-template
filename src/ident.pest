@@ -1,0 +1,14 @@
+alpha = _{ 'a'..'z' | 'A'..'Z' }
+digit = _{ '0'..'9' }
+
+symbol = _{  ("_" | "-" | "." )+ }
+whitespace = _{ " " }
+ob = _{ "{" }
+cb = _{ "}" }
+pth = _{ "/" }
+word = { alpha ~ (alpha | digit | symbol)+ }
+optword = @{ word ~ "?"}
+var = { ob  ~ ( optword | word ){1}  ~ cb }
+trans = { ob  ~ word  ~ ("|" ~ word )+ ~ cb }
+path = @{ (word | symbol | pth )+ }
+ident_list = _{ (var | trans | path)+ }
