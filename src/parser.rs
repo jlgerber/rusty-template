@@ -84,7 +84,7 @@ impl TemplateParser {
                     result.push_str(span.as_str());
                 },
                 Rule::trans => {
-                    println!("rule trans");
+                    debug!("Rule::trans");
                     let mut transformed = String::new();
                     let mut cnt = 0;
                     let mut skip = false;
@@ -132,15 +132,13 @@ impl TemplateParser {
                     }
                 },
                 Rule::var => {
-                    println!(
-                        "Rule::var"
-                    );
+                    debug!("Rule::var");
                     for inner_pair in pair.clone().into_inner() {
                         let inner_span = inner_pair.clone().into_span();
                         match inner_pair.as_rule() {
                             Rule::alpha | Rule::digit | Rule::word => {
                                 if let Some(ref val) = map.get(inner_span.as_str()) {
-                                    println!("matched {}", val);
+                                    debug!("matched {}", val);
                                     result.push_str(val);
                                 } else {
                                     return Err(RustyTemplateError::PestError(format!("unable to extract {} from map", inner_span.as_str())));
@@ -149,7 +147,7 @@ impl TemplateParser {
                             Rule::optword => {
                                 let key = inner_span.as_str().trim_right_matches('?');
                                 if let Some(ref val) = map.get(key) {
-                                    println!("matched {}", val);
+                                    debug!("matched {}", val);
                                     result.push_str(val);
                                 } else {
                                     // since we are an optword, we do nothing
