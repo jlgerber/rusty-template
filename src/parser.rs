@@ -19,6 +19,9 @@ pub fn dot_to_slash(input: String) -> String {
     input.replace(".", "/")
 }
 
+pub fn slash(input: String) -> String {
+    format!("{}/", input)
+}
 // pub fn hash(input: String) -> String {
 
 // }
@@ -29,6 +32,7 @@ impl Default for TemplateParser {
         let mut s = Self::new(fhm);
         s.add_filter("upper".to_string(), upper);
         s.add_filter("dot_to_slash".to_string(), dot_to_slash);
+        s.add_filter("slash".to_string(), slash );
         s
     }
 }
@@ -62,6 +66,7 @@ impl TemplateParser {
                     println!("rule trans");
                     let mut transformed = String::new();
                     let mut cnt = 0;
+                    let mut skip = false;
                     for inner_pair in pair.clone().into_inner() {
                         let inner_span = inner_pair.clone().into_span();
                         match inner_pair.as_rule() {
@@ -73,6 +78,7 @@ impl TemplateParser {
                                         return Err(RustyTemplateError::PestError(format!("Rule:  unable to retrieve {} from map", inner_span.as_str())));
                                     }
                                 } else {
+                                    if skip {continue;}
                                     if  self.filters.contains_key(inner_span.as_str()) {
                                         transformed = self.filters[inner_span.as_str()](transformed) ;
 
@@ -82,15 +88,27 @@ impl TemplateParser {
                                 }
                                 cnt += 1;
                             },
+                            Rule::optword => {
+                                let key = inner_span.as_str().trim_right_matches('?');
+                                if let Some(ref value) = map.get(key) {
+                                    transformed = value.to_string();
+                                    cnt +=1;
+                                } else {
+                                    skip = true;
+                                    break;
+                                }
+                            },
                             Rule::trans => {
                                 transformed = self.filters[inner_span.as_str()](transformed) ;
                             },
                             _ => {
-                            return Err(RustyTemplateError::PestError(format!("Unexpected rule in trans: {:?}", inner_pair.clone().as_rule() )))
+                                return Err(RustyTemplateError::PestError(format!("Unexpected rule in trans: {:?}", inner_pair.clone().as_rule() )))
                             }
                         }
                     }
-                    result.push_str(&transformed);
+                    if !skip {
+                        result.push_str(&transformed);
+                    }
                 },
                 Rule::var => {
                     println!(

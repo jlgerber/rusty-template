@@ -10,6 +10,6 @@ fn main() {
     vhm.insert(s("instance.name"),s("1"));
     let p = parser::TemplateParser::default();
 
-    let result = p.parse("/dd/shows/SHOW/{ instance.level  | dot_to_slash }/SHARED/{context.department_code?}", &vhm);
+    let result = p.parse("/dd/shows/SHOW/{ instance.level?  | dot_to_slash | slash }SHARED/{context.department_code?}", &vhm);
     println!("solved {}",result.unwrap());
 }

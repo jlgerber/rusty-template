@@ -9,6 +9,6 @@ pth = _{ "/" }
 word = { alpha ~ (alpha | digit | symbol)+ }
 optword = @{ word ~ "?"}
 var = { ob  ~ ( optword | word ){1}  ~ cb }
-trans = { ob  ~ word  ~ ("|" ~ word )+ ~ cb }
+trans = { ob  ~ ( optword | word )  ~ ("|" ~ word )+ ~ cb }
 path = @{ (word | symbol | pth )+ }
 ident_list = _{ (var | trans | path)+ }
