@@ -1,11 +1,12 @@
 
+extern crate seahash;
+use errors::RustyTemplateError;
 use FilterCallback;
 use FilterHashMap;
-use VarHashMap;
-use errors::RustyTemplateError;
-use Rule;
 use parse;
+use Rule;
 use std::default::Default;
+use VarHashMap;
 
 pub struct TemplateParser {
     filters: FilterHashMap
@@ -22,10 +23,9 @@ pub fn dot_to_slash(input: String) -> String {
 pub fn slash(input: String) -> String {
     format!("{}/", input)
 }
-// pub fn hash(input: String) -> String {
-
-// }
-
+ pub fn hash(input: String) -> String {
+     seahash::hash(input.as_bytes()).to_string()
+}
 
 impl Default for TemplateParser {
     fn default() -> Self {
@@ -34,6 +34,8 @@ impl Default for TemplateParser {
         s.add_filter("upper".to_string(), upper);
         s.add_filter("dot_to_slash".to_string(), dot_to_slash);
         s.add_filter("slash".to_string(), slash );
+        s.add_filter("hash".to_string(), hash );
+
         s
     }
 }
@@ -148,5 +150,149 @@ impl TemplateParser {
             }
         }
         Ok(result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+    use utils::s;
+
+    fn setup_parser() -> (TemplateParser, VarHashMap) {
+        let mut vhm = VarHashMap::new();
+        vhm.insert(s("instance.level"), s("chickenking.rd.9999"));
+        vhm.insert(s("context.department_code"), s("anim"));
+        vhm.insert(s("context.lod_code"), s("hi"));
+        vhm.insert(s("asset.name"), s("robot"));
+        vhm.insert(s("instance.name"),s("1"));
+        (TemplateParser::default(), vhm)
+    }
+
+    // Just the basic variable lookup
+    #[test]
+    fn var() {
+        let (parser, map) = setup_parser();
+        let t = "/doo/da/{asset.name}";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("/doo/da/robot"));
+    }
+
+
+    // Basic variable lookup with space in front of the key
+    #[test]
+    fn var_spaces_front() {
+        let (parser, map) = setup_parser();
+        let t = "/doo/da/{  asset.name}";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("/doo/da/robot"));
+    }
+
+    // Basic variable lookup with spaces after key
+    #[test]
+    fn var_spaces_rear() {
+        let (parser, map) = setup_parser();
+        let t = "/doo/da/{asset.name }";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("/doo/da/robot"));
+        let t = "/doo/da/{asset.name    }";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("/doo/da/robot"));
+    }
+
+    // Basic variable lookup with spaces around key
+    #[test]
+    fn var_spaces() {
+        let (parser, map) = setup_parser();
+        let t = "/doo/da/{ asset.name }";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("/doo/da/robot"));
+        let t = "/doo/da/{  asset.name    }";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("/doo/da/robot"));
+    }
+
+
+    // variable optword lookup with extant key
+    #[test]
+    fn var_optional_mit() {
+        let (parser, map) = setup_parser();
+        let t = "/doo/da/{ asset.name? }";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("/doo/da/robot"));
+    }
+
+    // variable optword lookup with non-extant key
+    #[test]
+    fn var_optional_miss() {
+        let (parser, map) = setup_parser();
+        let t = "/doo/da/{ asset.namee? }";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("/doo/da/"));
+    }
+
+    // multiple variables in row
+    #[test]
+    fn multi_var() {
+        let (parser, map) = setup_parser();
+        let t = "/doo/da/{context.department_code }/bla/{ asset.name }";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("/doo/da/anim/bla/robot"));
+    }
+
+    // pipeline var lookup to upper function
+    #[test]
+    fn var_pipeline_upper() {
+        let (parser, map) = setup_parser();
+        let t = "/doo/da/{ asset.name | upper}";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("/doo/da/ROBOT"));
+    }
+
+    // pipeline var lookup to dot_2_slash function which should replace all
+    // periods with slashes
+    #[test]
+    fn var_pipeline_dot2slash() {
+        let (parser, map) = setup_parser();
+        let t = "/doo/da/{ instance.level | dot_to_slash }";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("/doo/da/chickenking/rd/9999"));
+    }
+
+    // Multiple pipelined function applications to the same variable.
+    #[test]
+    fn var_pipeline_multi() {
+        let (parser, map) = setup_parser();
+        let t = "/doo/da/{ asset.name | upper | slash}";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("/doo/da/ROBOT/"));
+    }
+
+    // pipeline with successful optword lookup
+    #[test]
+    fn var_pipeline_upper_optional() {
+        let (parser, map) = setup_parser();
+        let t = "/doo/da/{ asset.name? | upper}";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("/doo/da/ROBOT"));
+    }
+
+    // pipeline with failed optword lookup
+    #[test]
+    fn var_pipeline_optional_miss() {
+        let (parser, map) = setup_parser();
+        let t = "/doo/da/{ asset.namee? | upper}";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("/doo/da/"));
+    }
+
+
+    // variable optword lookup with hash
+    #[test]
+    fn var_pipeline_optional_hash() {
+        let (parser, map) = setup_parser();
+        let t = "{ asset.name? | hash }";
+        let result = parser.parse(t, &map).unwrap();
+        assert_eq!(result, s("15616689721111649596"));
     }
 }

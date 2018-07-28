@@ -1,6 +1,7 @@
 extern crate rusty_template;
 use rusty_template::*;
 use rusty_template::utils::s;
+
 fn main() {
     let mut vhm = VarHashMap::new();
     vhm.insert(s("instance.level"), s("chickenking.rd.9999"));
