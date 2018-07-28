@@ -12,46 +12,64 @@ pub struct TemplateParser {
     filters: FilterHashMap
 }
 
+///
+/// # Filter functions
+///
+
+/// upper converts the input to an upper case string.
 pub fn upper(input: String) -> String {
     input.to_uppercase()
 }
 
+/// dot_to_slash converts all periods (`.`) in the input to slashes (`\`) in the output string.
 pub fn dot_to_slash(input: String) -> String {
     input.replace(".", "/")
 }
 
+/// slash appends a slash to the input string.
 pub fn slash(input: String) -> String {
     format!("{}/", input)
 }
+
+/// hash calculates a u64 hash of the input and returns it as a string.
  pub fn hash(input: String) -> String {
      seahash::hash(input.as_bytes()).to_string()
 }
 
 impl Default for TemplateParser {
+
+    /// Build a TemplateParser instance with an empty FilterHashMap.
     fn default() -> Self {
         let  fhm = FilterHashMap::new();
-        let mut s = Self::new(fhm);
-        s.add_filter("upper".to_string(), upper);
-        s.add_filter("dot_to_slash".to_string(), dot_to_slash);
-        s.add_filter("slash".to_string(), slash );
-        s.add_filter("hash".to_string(), hash );
-
-        s
+        Self::new(fhm)
     }
 }
 
 impl TemplateParser {
+
+    /// Given a FilterHashMap instance, return a new TemplateParser instance with the supplied map.
     pub fn new(filters: FilterHashMap) -> TemplateParser {
         TemplateParser {
             filters
         }
     }
+    /// Construct a TemplateExplorer instance with the filters prepopulated with all of the
+    /// default filters in this module.
+    pub fn default_config() -> TemplateParser {
+        let mut parser = TemplateParser::default();
+        parser.add_filter("upper".to_string(), upper);
+        parser.add_filter("dot_to_slash".to_string(), dot_to_slash);
+        parser.add_filter("slash".to_string(), slash );
+        parser.add_filter("hash".to_string(), hash );
+        parser
+    }
 
+    /// Add a FilterCallback with the supplied key.
     pub fn add_filter<I>(&mut self, key: I, value: FilterCallback) where I: Into<String> {
         self.filters.insert(key.into(), value);
     }
 
-    /// Given a str template and a refrence to a hashmap storing the potential keys to look up
+    /// Given a &str template and a reference to a hashmap storing the potential keys to look up
     /// from the template, generate a Result.
     pub fn parse(&self, template: &str, map: &VarHashMap)  -> Result<String, RustyTemplateError> {
         let pairs = parse(template)
@@ -166,7 +184,7 @@ mod tests {
         vhm.insert(s("context.lod_code"), s("hi"));
         vhm.insert(s("asset.name"), s("robot"));
         vhm.insert(s("instance.name"),s("1"));
-        (TemplateParser::default(), vhm)
+        (TemplateParser::default_config(), vhm)
     }
 
     // Just the basic variable lookup
