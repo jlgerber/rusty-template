@@ -26,6 +26,11 @@ pub fn dot_to_slash(input: String) -> String {
     input.replace(".", "/")
 }
 
+/// dot appends a dot to the input string
+pub fn dot(input: String) -> String {
+    format!("{}.", input)
+}
+
 /// slash appends a slash to the input string.
 pub fn slash(input: String) -> String {
     format!("{}/", input)
@@ -57,10 +62,11 @@ impl TemplateParser {
     /// default filters in this module.
     pub fn default_config() -> TemplateParser {
         let mut parser = TemplateParser::default();
-        parser.add_filter("upper".to_string(), upper);
-        parser.add_filter("dot_to_slash".to_string(), dot_to_slash);
-        parser.add_filter("slash".to_string(), slash );
-        parser.add_filter("hash".to_string(), hash );
+        parser.add_filter( "upper".to_string(), upper);
+        parser.add_filter( "dot_to_slash".to_string(), dot_to_slash);
+        parser.add_filter( "dot".to_string(), dot );
+        parser.add_filter( "slash".to_string(), slash );
+        parser.add_filter( "hash".to_string(), hash );
         parser
     }
 
