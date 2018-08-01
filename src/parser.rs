@@ -8,10 +8,10 @@ use Rule;
 use std::default::Default;
 use VarHashMap;
 
+
 pub struct TemplateParser {
     filters: FilterHashMap
 }
-
 ///
 /// # Filter functions
 ///
