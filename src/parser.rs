@@ -38,12 +38,20 @@ pub fn slash(input: String) -> String {
 // TODO: extend parser to handle prefix("_")
 /// prefix with underscore
 pub fn underscore_prefix(input: String) -> String {
-    format!("_{}", input)
+    if input == "" {
+        input
+    } else {
+        format!("_{}", input)
+    }
 }
 
 /// underscore suffix
 pub fn underscore_suffix(input: String) -> String {
-    format!("{}_", input)
+    if input == "" {
+        input
+    } else {
+        format!("{}_", input)
+    }
 
 }
 /// hash calculates a u64 hash of the input and returns it as a string.
