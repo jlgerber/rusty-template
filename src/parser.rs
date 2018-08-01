@@ -35,7 +35,17 @@ pub fn dot(input: String) -> String {
 pub fn slash(input: String) -> String {
     format!("{}/", input)
 }
+// TODO: extend parser to handle prefix("_")
+/// prefix with underscore
+pub fn underscore_prefix(input: String) -> String {
+    format!("_{}", input)
+}
 
+/// underscore suffix
+pub fn underscore_suffix(input: String) -> String {
+    format!("{}_", input)
+
+}
 /// hash calculates a u64 hash of the input and returns it as a string.
  pub fn hash(input: String) -> String {
      seahash::hash(input.as_bytes()).to_string()
@@ -67,6 +77,9 @@ impl TemplateParser {
         parser.add_filter( "dot".to_string(), dot );
         parser.add_filter( "slash".to_string(), slash );
         parser.add_filter( "hash".to_string(), hash );
+        parser.add_filter( "underscore_prefix".to_string(), underscore_prefix );
+        parser.add_filter( "underscore_suffix".to_string(), underscore_suffix );
+
         parser
     }
 
